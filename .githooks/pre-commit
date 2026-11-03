@@ -1,0 +1,32 @@
+#!/bin/sh
+# Blocks commits on main and commits that contain secrets.
+# Turned on by scripts/setup-dev.sh. Never skip it with --no-verify.
+
+branch=$(git symbolic-ref --short HEAD 2>/dev/null || echo detached)
+case "$branch" in
+  main|master)
+    echo "BLOCKED: do not commit on $branch. Run: git switch testing"
+    exit 1
+    ;;
+esac
+
+secret_files='(^|/)(\.env(\..+)?|.+\.pem|.+\.key|.+\.p12|.+\.pfx|id_rsa|id_ed25519|credentials\.json|service-account.*\.json)$'
+bad=$(git diff --cached --name-only --diff-filter=ACMR | grep -E "$secret_files" | grep -vE '(^|/)\.env\.example$')
+if [ -n "$bad" ]; then
+  echo "BLOCKED: these files can hold secrets and must not be committed:"
+  echo "$bad"
+  echo "Unstage them with: git restore --staged <file>"
+  exit 1
+fi
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "BLOCKED: gitleaks is not installed, so this commit cannot be checked for secrets."
+  echo "Install it: https://github.com/gitleaks/gitleaks/releases (on a Mac: brew install gitleaks)"
+  exit 1
+fi
+
+if ! gitleaks git --pre-commit --staged --redact --no-banner --verbose .; then
+  echo "BLOCKED: gitleaks found what looks like a secret. Do not commit it."
+  echo "Move the value to .env, use an environment variable, and tell the human."
+  exit 1
+fi

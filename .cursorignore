@@ -1,0 +1,8 @@
+.env
+.env.*
+!.env.example
+private-data/
+*.pem
+*.key
+*.p12
+*.pfx
