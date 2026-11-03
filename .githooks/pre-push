@@ -1,0 +1,13 @@
+#!/bin/sh
+# Blocks direct pushes to main. Production changes reach main only through
+# a pull request from testing, after a person says yes.
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  case "$remote_ref" in
+    refs/heads/main|refs/heads/master)
+      echo "BLOCKED: do not push to ${remote_ref#refs/heads/}. Push to testing, then open a pull request."
+      exit 1
+      ;;
+  esac
+done
+exit 0

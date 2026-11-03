@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.local)",
+      "Read(./.env.development)",
+      "Read(./.env.testing)",
+      "Read(./.env.production)",
+      "Read(./private-data/**)"
+    ]
+  }
+}

@@ -1,0 +1,43 @@
+name: checks
+
+# Runs on every push to every branch. A pull request shows the result of
+# its latest push, so no separate pull_request trigger is needed.
+on:
+  push:
+    branches: ['**']
+
+permissions:
+  contents: read
+
+jobs:
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Install gitleaks 8.30.1
+        run: |
+          curl -sSfL -o gitleaks.tar.gz https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz
+          echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  gitleaks.tar.gz" | sha256sum -c -
+          tar -xzf gitleaks.tar.gz gitleaks
+      - name: Scan the full git history
+        run: ./gitleaks git --redact --no-banner --verbose .
+
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Build, lint and test
+        run: |
+          if [ -f package-lock.json ]; then npm ci; elif [ -f package.json ]; then npm install; fi
+          if [ -f package.json ]; then
+            npm run build --if-present
+            npm run lint --if-present
+            npm run test --if-present
+          fi
+          if [ -f requirements.txt ]; then python -m pip install -r requirements.txt; fi
+          if [ -d tests ]; then
+            python -m pip install pytest
+            python -m pytest
+          fi

@@ -1,0 +1,3 @@
+# Two AI sessions can each add an entry at the top of SESSIONS.md.
+# This keeps both entries instead of creating a merge conflict.
+SESSIONS.md merge=union
