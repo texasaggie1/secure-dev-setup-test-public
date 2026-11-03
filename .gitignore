@@ -1,0 +1,20 @@
+# Secrets: never commit these
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa
+id_ed25519
+credentials.json
+service-account*.json
+
+# Client and personal data: stays on this computer only
+private-data/
+
+# Local tool files
+.DS_Store
+node_modules/
+.netlify/
